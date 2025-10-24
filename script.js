@@ -1,0 +1,238 @@
+"use strict";
+
+// Cell flags
+const U = 1; // Can move up
+const D = 2; // Can move down
+const L = 4; // Can move left
+const R = 8; // Can move right
+const UDLR = U|D|L|R;
+const UDL = U|D|L;
+const UDR = U|D|R;
+const UD = U|D;
+const UL = U|L;
+const UR = U|R;
+const ULR = U|L|R;
+const DLR = D|L|R;
+const DL = D|L;
+const DR = D|R;
+const LR = L|R;
+const W = 16; // Water
+
+const cells = [
+  // Row 0
+  [DR,  DLR,  DLR,  DLR,  DLR,  DLR,  DLR,  L,    0,    0,    0,    0],
+  // Row 1
+  [UDR, ULR,  UDLR, UDLR, UDLR, UDLR, UDLR, DL,   0,    0,    0,    0],
+  // Row 2
+  [UDR, LR,   ULR,  UDLR, ULR,  ULR,  UDLR, UDL,  0,    DR|W, LR|W, L],
+  // Row 3
+  [UD,  0,    0,    UD,   0,    0,    UR,   UDLR, DLR,  UDL|W, 0,    0],
+  // Row 4
+  [UD,  0,    DR,   UDL,  0,    0,    0,    UDR,  UDLR, UDLR, DLR,  DL],
+  // Row 5
+  [UD,  0,    UDR,  UL,   0,    0,    R,    UDLR, UDLR, UDLR, UDLR, UDL],
+  // Row 6
+  [UD,  0,    UD,   0,    0,    0,    DR,   UDLR, UDLR, UDLR, UDLR, UDL],
+  // Row 7
+  [UDR, DLR,  UDLR, DLR,  DLR,  DLR,  UDLR, UDLR, UDLR, UDLR, UDLR, UDL ],
+  // Row 8
+  [UDR, UDLR, UDLR, UDLR, UDLR, UDLR, UDLR, UDLR, UDLR, UDLR, UDLR, UDL],
+  // Row 9
+  [UDR, UDLR, UDLR, UDLR, UDL,  UDR,  UDLR, UDLR, UDLR, UDLR, UDL,  UL],
+  // Row 10
+  [UR,  ULR,  ULR,  ULR,  ULR,  ULR,  ULR,  ULR,  ULR,  ULR,  ULR,  L]
+]
+
+const map = {
+  element: document.getElementById("map"),
+  animation: {
+    timestamp: null,
+  }
+}
+
+const pc = {
+  element: document.getElementById("pc"),
+  animation: {
+    current: null
+  },
+  cell: {
+    x: 2,
+    y: 4
+  },
+  canSwim: false,
+}
+
+const npc1 = {
+  element: document.getElementById("npc1"),
+  animation: {
+    current: null
+  },
+  cell: {
+    x: 10,
+    y: 9
+  },
+  canSwim: false,
+}
+
+const moveAnimation = (position) => [
+  {
+    transform: `translate3d(${position.x}px, ${position.y}px, 0)`
+  }
+]
+
+const moveTimeline = {
+  duration: 1000,
+  fill: "forwards"
+}
+
+const jumpAnimation = (position) => [
+  {
+    transform: `translate3d(${position.x}px, ${position.y}px, 0)`
+  }
+]
+
+const jumpTimeline = {
+  duration: 1000,
+  fill: "forwards"
+}
+
+const position = (cell) => {
+  let scale = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--scale"))
+  return {
+    x: cell.x * scale * 16,
+    y: cell.y * scale * 16
+  }
+}
+
+const nextCell = (cell, direction) => {
+  const flag = cells[cell.y][cell.x];
+  if (flag & direction) {
+    switch (direction) {
+      case L:
+        return {
+          x: cell.x - 1,
+          y: cell.y
+        }
+      case R:
+        return {
+          x: cell.x + 1,
+          y: cell.y
+        }
+      case U:
+        return {
+          x: cell.x,
+          y: cell.y - 1,
+        }
+      case D:
+        return {
+          x: cell.x,
+          y: cell.y + 1,
+        }
+    }
+  }
+  return cell;
+}
+
+const transformCharacter = (character, action, direction) => {
+  const current = character.cell;
+  const next = nextCell(current, direction);
+  const collision = current.x === next.x && current.y === next.y;
+  const currentPosition = position(current);
+  const nextPosition = position(next);
+  character.cell = next;
+  switch (action) {
+    case "move":
+      if (!collision) {
+        character.element.animate(moveAnimation(nextPosition), moveTimeline)
+      }
+      break;
+    case "jump":  
+      if (collision) {
+        character.element.animate(bounceAnimation(currentPosition), bounceTimeline)
+      } else {
+        character.element.animate(jumpAnimation(nextPosition), jumpTimeline)
+      }
+      break;
+    default:
+      character.element.style.transform = `translate3d(${nextPosition.x}px, ${nextPosition.y}px, 0)`
+  }
+}
+
+transformCharacter(pc);
+
+const newMapAnimation = (direction) => {
+  const timeline = {
+      duration: 750,
+      fill: "forwards"
+  };
+  const effect = new Map([
+      [U, [{ transform: "rotateX(15deg)" }, { transform: "rotateX(0deg)" }]],
+      [D, [{ transform: "rotateX(-15deg)" }, { transform: "rotateX(0deg)" }]],
+      [L, [{ transform: "rotateY(-15deg)" }, { transform: "rotateY(0deg)" }]],
+      [R, [{ transform: "rotateY(15deg)" }, { transform: "rotateY(0deg)" }]],
+  ]);
+  return new Animation(new KeyframeEffect(map.element, effect.get(direction), timeline));
+};
+
+const newJumpAnimation = (character, direction) => {
+  const timeline = {
+    duration: 1000,
+    fill: "forwards"
+  }
+  const fromCell = character.cell;
+  const toCell = nextCell(fromCell, direction);
+  const isSameCell = fromCell.x == toCell.x && fromCell.y === toCell.y;
+  let effect;
+  const toPosition = position(toCell);
+  if (isSameCell) {
+    effect = {
+      transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+    };
+  }
+  else {
+    effect = {
+      transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+    };
+  }
+  return new Animation(new KeyframeEffect(character.element, effect,
+    timeline));
+};
+
+const jump = (direction) => {
+  const mapAnimation = newMapAnimation(direction);
+  const jumpAnimation = newJumpAnimation(pc, direction);
+  console.log(direction);
+  window.requestAnimationFrame((timestamp) => {
+    const mapTimestamp = map.animation.timestamp;
+    if (!mapTimestamp || timestamp - mapTimestamp > 1000) {
+      mapAnimation.play();
+      map.animation.timestamp = timestamp;
+      jumpAnimation.play();
+    }
+  })
+}
+
+document.addEventListener("keydown", function onEvent(event) {
+  let direction;
+  switch (event.code) {
+    case "ArrowUp":
+    case "KeyW":
+      direction = U;
+    break;
+    case "ArrowDown":
+    case "KeyS":
+      direction = D;
+    break;
+    case "ArrowLeft":
+    case "KeyA":
+      direction = L;
+    break;
+    case "ArrowRight":
+    case "KeyD":
+      direction = R;
+    break;
+    default:
+    return;
+  }
+  jump(direction);
+});
