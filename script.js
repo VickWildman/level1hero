@@ -74,28 +74,6 @@ const npc1 = {
   canSwim: false,
 }
 
-const moveAnimation = (position) => [
-  {
-    transform: `translate3d(${position.x}px, ${position.y}px, 0)`
-  }
-]
-
-const moveTimeline = {
-  duration: 1000,
-  fill: "forwards"
-}
-
-const jumpAnimation = (position) => [
-  {
-    transform: `translate3d(${position.x}px, ${position.y}px, 0)`
-  }
-]
-
-const jumpTimeline = {
-  duration: 1000,
-  fill: "forwards"
-}
-
 const position = (cell) => {
   let scale = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--scale"))
   return {
@@ -133,32 +111,12 @@ const nextCell = (cell, direction) => {
   return cell;
 }
 
-const transformCharacter = (character, action, direction) => {
-  const current = character.cell;
-  const next = nextCell(current, direction);
-  const collision = current.x === next.x && current.y === next.y;
-  const currentPosition = position(current);
-  const nextPosition = position(next);
-  character.cell = next;
-  switch (action) {
-    case "move":
-      if (!collision) {
-        character.element.animate(moveAnimation(nextPosition), moveTimeline)
-      }
-      break;
-    case "jump":  
-      if (collision) {
-        character.element.animate(bounceAnimation(currentPosition), bounceTimeline)
-      } else {
-        character.element.animate(jumpAnimation(nextPosition), jumpTimeline)
-      }
-      break;
-    default:
-      character.element.style.transform = `translate3d(${nextPosition.x}px, ${nextPosition.y}px, 0)`
-  }
+const positionCharacter = (character) => {
+  const characterPosition = position(character.cell);
+  character.element.style.transform = `translate3d(${characterPosition.x}px, ${characterPosition.y}px, 0)`;
 }
 
-transformCharacter(pc);
+positionCharacter(pc);
 
 const newMapAnimation = (direction) => {
   const timeline = {
@@ -176,7 +134,7 @@ const newMapAnimation = (direction) => {
 
 const newJumpAnimation = (character, direction) => {
   const timeline = {
-    duration: 1000,
+    duration: 750,
     fill: "forwards"
   }
   const fromCell = character.cell;
@@ -201,13 +159,13 @@ const newJumpAnimation = (character, direction) => {
 const jump = (direction) => {
   const mapAnimation = newMapAnimation(direction);
   const jumpAnimation = newJumpAnimation(pc, direction);
-  console.log(direction);
   window.requestAnimationFrame((timestamp) => {
     const mapTimestamp = map.animation.timestamp;
     if (!mapTimestamp || timestamp - mapTimestamp > 1000) {
       mapAnimation.play();
       map.animation.timestamp = timestamp;
       jumpAnimation.play();
+      pc.cell = nextCell(pc.cell, direction)
     }
   })
 }
