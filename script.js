@@ -50,6 +50,7 @@ const map = {
   }
 }
 
+// Player character
 const pc = {
   element: document.getElementById("pc"),
   animation: {
@@ -62,6 +63,7 @@ const pc = {
   canSwim: false,
 }
 
+// NPC
 const npc1 = {
   element: document.getElementById("npc1"),
   animation: {
@@ -111,6 +113,8 @@ const nextCell = (cell, direction) => {
   return cell;
 }
 
+const isSameCell = (cell1, cell2) => cell1.x == cell2.x && cell1.y == cell2.y;
+
 const positionCharacter = (character) => {
   const characterPosition = position(character.cell);
   character.element.style.transform = `translate3d(${characterPosition.x}px, ${characterPosition.y}px, 0)`;
@@ -132,36 +136,55 @@ const newMapAnimation = (direction) => {
   return new Animation(new KeyframeEffect(map.element, effect.get(direction), timeline));
 };
 
-const newJumpAnimation = (character, direction) => {
+const newCharacterAnimation = (character, direction, action) => {
   const timeline = {
     duration: 750,
     fill: "forwards"
   }
   const fromCell = character.cell;
   const toCell = nextCell(fromCell, direction);
-  const isSameCell = fromCell.x == toCell.x && fromCell.y === toCell.y;
-  let effect;
   const toPosition = position(toCell);
-  if (isSameCell) {
-    effect = {
-      transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
-    };
-  }
-  else {
-    effect = {
-      transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
-    };
+  let effect;
+  switch (action) {
+    case "move":
+      if (isSameCell(fromCell, toCell)) {
+        effect = {
+          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+        }    
+      }
+      else {
+        effect = {
+          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+        }
+      }
+      break;
+    case "jump":
+      if (isSameCell(fromCell, toCell)) {
+        effect = {
+          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+        };
+      }
+      else {
+        effect = {
+          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+        };
+      }
+      break;
   }
   return new Animation(new KeyframeEffect(character.element, effect,
     timeline));
 };
 
+const move = (character, direction) => {
+}
+
 const jump = (direction) => {
+  const jumpCooldown = 1000;
   const mapAnimation = newMapAnimation(direction);
-  const jumpAnimation = newJumpAnimation(pc, direction);
+  const jumpAnimation = newCharacterAnimation(pc, direction, "jump");
   window.requestAnimationFrame((timestamp) => {
     const mapTimestamp = map.animation.timestamp;
-    if (!mapTimestamp || timestamp - mapTimestamp > 1000) {
+    if (!mapTimestamp || timestamp - mapTimestamp > jumpCooldown) {
       mapAnimation.play();
       map.animation.timestamp = timestamp;
       jumpAnimation.play();
@@ -171,26 +194,28 @@ const jump = (direction) => {
 }
 
 document.addEventListener("keydown", function onEvent(event) {
-  let direction;
-  switch (event.code) {
-    case "ArrowUp":
-    case "KeyW":
-      direction = U;
-    break;
-    case "ArrowDown":
-    case "KeyS":
-      direction = D;
-    break;
-    case "ArrowLeft":
-    case "KeyA":
-      direction = L;
-    break;
-    case "ArrowRight":
-    case "KeyD":
-      direction = R;
-    break;
-    default:
-    return;
+  if (!event.repeat) {
+    let direction;
+    switch (event.code) {
+      case "ArrowUp":
+      case "KeyW":
+        direction = U;
+        break;
+      case "ArrowDown":
+      case "KeyS":
+        direction = D;
+        break;
+      case "ArrowLeft":
+      case "KeyA":
+        direction = L;
+        break;
+      case "ArrowRight":
+      case "KeyD":
+        direction = R;
+      break;
+      default:
+        return;
+    }
+    jump(direction);
   }
-  jump(direction);
 });
