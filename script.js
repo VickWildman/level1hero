@@ -117,10 +117,19 @@ const isSameCell = (cell1, cell2) => cell1.x == cell2.x && cell1.y == cell2.y;
 
 const positionCharacter = (character) => {
   const characterPosition = position(character.cell);
-  character.element.style.transform = `translate3d(${characterPosition.x}px, ${characterPosition.y}px, 0)`;
+  character.element.style.translate = `${characterPosition.x}px ${characterPosition.y}px`
 }
 
 positionCharacter(pc);
+
+const flipCharacter = (character, direction) => {
+  if (direction == L) {
+    character.element.style.scale = "-1 1";
+  }
+  else if (direction == R) {
+    character.element.style.scale = "1 1";
+  }
+}
 
 const newMapAnimation = (direction) => {
   const timeline = {
@@ -149,25 +158,18 @@ const newCharacterAnimation = (character, direction, action) => {
     case "move":
       if (isSameCell(fromCell, toCell)) {
         effect = {
-          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+          translate: `${toPosition.x}px ${toPosition.y}px`
         }    
       }
       else {
         effect = {
-          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
+          translate: `${toPosition.x}px ${toPosition.y}px`
         }
       }
       break;
     case "jump":
-      if (isSameCell(fromCell, toCell)) {
-        effect = {
-          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
-        };
-      }
-      else {
-        effect = {
-          transform: `translate3d(${toPosition.x}px, ${toPosition.y}px, 0)`
-        };
+      effect = {
+        translate: `${toPosition.x}px ${toPosition.y}px`,
       }
       break;
   }
@@ -187,6 +189,7 @@ const jump = (direction) => {
     if (!mapTimestamp || timestamp - mapTimestamp > jumpCooldown) {
       mapAnimation.play();
       map.animation.timestamp = timestamp;
+      flipCharacter(pc, direction);
       jumpAnimation.play();
       pc.cell = nextCell(pc.cell, direction)
     }
