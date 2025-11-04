@@ -49,8 +49,21 @@ body {
 
 .character#pc .sprites {
   background-position-x: calc(-16*var(--scale));
-  background-position-y: calc(var(--scale));
+  background-position-y: 0;
+  animation-name: pcIdleAnimation;
+  animation-timing-function: steps(2, jump-none);
+  animation-duration: 750ms;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
 }
+
+@keyframes pcIdleAnimation {
+  to {
+    background-position-x: calc(-16*var(--scale));
+    background-position-y: calc(-32*var(--scale));
+  }
+}
+
 
 .character#npc1 .sprites {
   background-position-x: calc(-64*var(--scale));
