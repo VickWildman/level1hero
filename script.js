@@ -77,12 +77,19 @@ const npc1 = {
 }
 
 const position = (cell) => {
-  let scale = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--scale"))
+  let cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--cell-size"));
   return {
-    x: cell.x * scale * 16,
-    y: cell.y * scale * 16
+    x: cell.x * cellSize,
+    y: cell.y * cellSize
   }
 }
+
+const positionCharacter = (character) => {
+  const characterPosition = position(character.cell);
+  character.element.style.translate = `${characterPosition.x}vmin ${characterPosition.y}vmin`
+}
+
+positionCharacter(pc);
 
 const nextCell = (cell, direction) => {
   const flag = cells[cell.y][cell.x];
@@ -114,13 +121,6 @@ const nextCell = (cell, direction) => {
 }
 
 const isSameCell = (cell1, cell2) => cell1.x == cell2.x && cell1.y == cell2.y;
-
-const positionCharacter = (character) => {
-  const characterPosition = position(character.cell);
-  character.element.style.translate = `${characterPosition.x}px ${characterPosition.y}px`
-}
-
-positionCharacter(pc);
 
 const flipCharacter = (character, direction) => {
   if (direction == L) {
@@ -158,18 +158,18 @@ const newCharacterAnimation = (character, direction, action) => {
     case "move":
       if (isSameCell(fromCell, toCell)) {
         effect = {
-          translate: `${toPosition.x}px ${toPosition.y}px`
+          translate: `${toPosition.x}vmin ${toPosition.y}vmin`
         }    
       }
       else {
         effect = {
-          translate: `${toPosition.x}px ${toPosition.y}px`
+          translate: `${toPosition.x}vmin ${toPosition.y}vmin`
         }
       }
       break;
     case "jump":
       effect = {
-        translate: `${toPosition.x}px ${toPosition.y}px`,
+        translate: `${toPosition.x}vmin ${toPosition.y}vmin`,
       }
       break;
   }

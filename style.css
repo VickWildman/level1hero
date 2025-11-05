@@ -1,13 +1,6 @@
 :root {
   --bg: #000000;
-  --scale: 2px;
-  --cell: calc(var(--scale) * 16);
-}
-
-@media(min-width: 600px) {
-  :root {
-    --scale: 3px;
-  }
+  --cell-size: 8vmin;
 }
 
 @font-face {
@@ -18,37 +11,33 @@
 body {
   background: var(--bg);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  perspective: 700px;
   overflow: hidden;
+  perspective: 800px;
 }
 
 #map {
   background: url("assets/map.png") no-repeat no-repeat;
-  background-size: 100%;
-  width: calc(12 * var(--cell));
-  height: calc(11 * var(--cell));
-  position: absolute;
+  background-size: contain;
+  width: calc(12 * var(--cell-size));
+  height: calc(11 * var(--cell-size));
+  margin: auto;
 }
 
 .character {
-  width: var(--cell);
-  height: var(--cell);
-  position: absolute;
+  width: var(--cell-size);
+  height: var(--cell-size);
   overflow: hidden;
 }
 
 .sprites {
   background: url("assets/sprites.png") no-repeat no-repeat;
   background-size: 100%;
-  width: calc(8 * var(--cell));
-  height: calc(10 * var(--cell));
-  position: absolute;
+  width: calc(8 * var(--cell-size));
+  height: calc(10 * var(--cell-size));
 }
 
 .character#pc .sprites {
-  background-position-x: calc(-16*var(--scale));
+  background-position-x: calc(-1 * var(--cell-size));
   background-position-y: 0;
   animation-name: pcIdleAnimation;
   animation-timing-function: steps(2, jump-none);
@@ -59,13 +48,7 @@ body {
 
 @keyframes pcIdleAnimation {
   to {
-    background-position-x: calc(-16*var(--scale));
-    background-position-y: calc(-32*var(--scale));
+    background-position-x: calc(-1 * var(--cell-size));
+    background-position-y: calc(-2 * var(--cell-size));
   }
-}
-
-
-.character#npc1 .sprites {
-  background-position-x: calc(-64*var(--scale));
-  background-position-y: calc(var(--scale));
 }
